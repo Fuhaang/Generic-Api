@@ -75,7 +75,7 @@ namespace Entities.UnitTests
         [Fact]
         public void BookUserID_HasCorrectType()
         {
-            Common.PropertyType(typeof(long), typeof(Book), "UserId");
+            Common.PropertyType(typeof(string), typeof(Book), "UserId");
         }
     }
 }
