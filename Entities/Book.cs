@@ -10,6 +10,6 @@ namespace Entities
         public DateTime PublicationDate { get; set; }
         public List<Categorie> Categories { get; set; }
         public User User { get; set; }
-        public long UserId { get; set; }
+        public string UserId { get; set; }
     }
 }

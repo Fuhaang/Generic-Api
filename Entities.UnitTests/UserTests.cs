@@ -7,30 +7,6 @@ namespace Entities.UnitTests
     public class UserTests
     {
         [Fact]
-        public void User_HasID()
-        {
-            Common.HasProperty(typeof(User), "Id");
-        }
-
-        [Fact]
-        public void UserID_HasCorrectType()
-        {
-            Common.PropertyType(typeof(long), typeof(User), "Id");
-        }
-
-        [Fact]
-        public void User_HasMail()
-        {
-            Common.HasProperty(typeof(User), "Mail");
-        }
-
-        [Fact]
-        public void UserMail_HasCorrectType()
-        {
-            Common.PropertyType(typeof(string), typeof(User), "Mail");
-        }
-
-        [Fact]
         public void User_HasFirstName()
         {
             Common.HasProperty(typeof(User), "FirstName");
@@ -64,29 +40,6 @@ namespace Entities.UnitTests
         public void UserBirthDate_HasCorrectType()
         {
             Common.PropertyType(typeof(DateTime), typeof(User), "BirthDate");
-        }
-
-        [Fact]
-        public void User_HasPasswordHash()
-        {
-            Common.HasProperty(typeof(User), "PasswordHash");
-        }
-
-        [Fact]
-        public void UserPasswordHash_HasCorrectType()
-        {
-            Common.PropertyType(typeof(byte[]), typeof(User), "PasswordHash");
-        }
-        [Fact]
-        public void User_HasPasswordSalt()
-        {
-            Common.HasProperty(typeof(User), "PasswordSalt");
-        }
-
-        [Fact]
-        public void UserPasswordSalt_HasCorrectType()
-        {
-            Common.PropertyType(typeof(byte[]), typeof(User), "PasswordSalt");
         }
 
         [Fact]

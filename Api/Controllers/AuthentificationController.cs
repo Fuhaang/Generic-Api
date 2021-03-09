@@ -1,37 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using Api.VM;
+﻿using Api.Helpers;
 using Entities;
-using EntitiesContext;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
-using UnitOfWork.Contract;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Api.Controllers
 {
     [AllowAnonymous]
     public class AuthentificationController : ControllerBase
     {
+        private readonly IOpenIddictScopeManager _scopeManager;
+        private readonly SignInManager<User> _signInManager;
+        private readonly UserManager<User> _userManager;
 
-        private readonly IUnitOfWork<ApplicationDbContext> _unitOfWork;
-        private readonly IOpenIddictApplicationManager _applicationManager;
-
-        public AuthentificationController(IUnitOfWork<ApplicationDbContext> uow, IOpenIddictApplicationManager applicationManager)
+        public AuthentificationController(
+            IOpenIddictScopeManager scopeManager,
+            SignInManager<User> signInManager,
+            UserManager<User> userManager)
         {
-            _unitOfWork = uow;
-            _applicationManager = applicationManager;
+            _scopeManager = scopeManager;
+            _signInManager = signInManager;
+            _userManager = userManager;
         }
 
         [HttpPost("~/connect/token"), Produces("application/json")]
@@ -41,52 +42,33 @@ namespace Api.Controllers
                           throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
             ClaimsPrincipal claimsPrincipal;
-            var sha = SHA256.Create();
-
             if (request.IsPasswordGrantType())
             {
                 // Note: the client credentials are automatically validated by OpenIddict:
-                var user = await _unitOfWork.GetRepository<User>().GetFirstOrDefault(u => u.Mail == request.Username);
-                // if client_id or client_secret are invalid, this action won't be invoked.
+                var user = await _userManager.FindByEmailAsync(request.Username);
 
+                // if client_id or client_secret are invalid, this action won't be invoked.
                 // If player doesn't exist return BadRequest
                 if (user == null)
                     return BadRequest("Email and password don't match");
 
                 // Password check
                 // If password are not corresponding return BadRequest
-                var passwordSaltedH = sha.ComputeHash(Encoding.ASCII.GetBytes(request.Password + Convert.ToBase64String(user.PasswordSalt)));
-                if (!user.PasswordHash.SequenceEqual(passwordSaltedH))
+                var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: false);
+                if (!result.Succeeded)
                 {
                     return BadRequest("Email and password don't match");
                 }
 
-                var application = await _applicationManager.FindByClientIdAsync(request.ClientId) ??
-                                  throw new InvalidOperationException("The application cannot be found.");
-
-                var identity = new ClaimsIdentity(
-                    TokenValidationParameters.DefaultAuthenticationType,
-                    OpenIddictConstants.Claims.Name, OpenIddictConstants.Claims.Role);
-
-                // Use the client_id as the subject identifier.
-                identity.AddClaim(OpenIddictConstants.Claims.Subject,
-                    await _applicationManager.GetClientIdAsync(application),
-                    OpenIddictConstants.Destinations.AccessToken);
-
-                identity.AddClaim(OpenIddictConstants.Claims.CodeHash,
-                    user.Id.ToString(),
-                    OpenIddictConstants.Destinations.AccessToken);
-
-                identity.AddClaim(OpenIddictConstants.Claims.Name,
-                    $"{user.FirstName} {user.LastName}",
-                    OpenIddictConstants.Destinations.AccessToken);
-
-                identity.AddClaim(OpenIddictConstants.Claims.Email,
-                    user.Mail,
-                    OpenIddictConstants.Destinations.AccessToken);
-
-                claimsPrincipal = new ClaimsPrincipal(identity);
+                claimsPrincipal = await _signInManager.CreateUserPrincipalAsync(user);
                 claimsPrincipal.SetScopes(request.GetScopes());
+                claimsPrincipal.SetResources(await _scopeManager.ListResourcesAsync(claimsPrincipal.GetScopes()).ToListAsync());
+
+                foreach (var claim in claimsPrincipal.Claims)
+                {
+                    claim.SetDestinations(GetDestinations(claim, claimsPrincipal));
+                }
+
             }
             else if (request.IsAuthorizationCodeGrantType())
             {
@@ -95,7 +77,7 @@ namespace Api.Controllers
                     (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme))
                     .Principal;
             }
-            else if (request.IsRefreshTokenGrantType())
+            else if (request.RefreshToken != null)
             {
                 // Retrieve the claims principal stored in the refresh token.
                 claimsPrincipal =
@@ -104,7 +86,7 @@ namespace Api.Controllers
             }
             else
             {
-                throw new InvalidOperationException("The specified grant type is not supported.");
+                throw new InvalidOperationException("The specified grant type is not supported by the application.");
             }
 
             // Returning a SignInResult will ask OpenIddict to issue the appropriate access/identity tokens.
@@ -153,38 +135,6 @@ namespace Api.Controllers
             return SignIn(claimsPrincipal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 
-        [HttpPost("~/connect/register"), Produces("application/json")]
-        public async Task<IActionResult> SignUp(AuthentificationVM userVM)
-        {
-            if (await _unitOfWork.GetRepository<User>().Exists(u => u.Mail == userVM.Mail))
-            {
-                return Conflict(new { Message = "L'adresse mail existe déja" });
-            }
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
-                return BadRequest(errors);
-            }
-            var sha = SHA256.Create();
-            User user = new User
-            {
-                FirstName = userVM.FirstName,
-                LastName = userVM.LastName,
-                BirthDate = userVM.BirthDate,
-                Mail = userVM.Mail,
-                IsConnected = false
-            };
-            user.PasswordSalt = new byte[10];
-            new RNGCryptoServiceProvider().GetNonZeroBytes(user.PasswordSalt);
-            var passwordSaltedH = sha.ComputeHash(Encoding.ASCII.GetBytes(userVM.Password + Convert.ToBase64String(user.PasswordSalt)));
-            user.PasswordHash = passwordSaltedH;
-
-
-            return
-            await _unitOfWork.GetRepository<User>().Add(user) ?
-            Ok() : BadRequest();
-        }
-
         [HttpGet("~/connect/userinfo")]
         public async Task<IActionResult> UserInfo()
         {
@@ -195,6 +145,47 @@ namespace Api.Controllers
                 Subject = claimsPrincipal.GetClaim(OpenIddictConstants.Claims.Subject),
                 Email = claimsPrincipal.GetClaim(OpenIddictConstants.Claims.Email)
             });
+        }
+
+        private static IEnumerable<string> GetDestinations(Claim claim, ClaimsPrincipal principal)
+        {
+            // Note: by default, claims are NOT automatically included in the access and identity tokens.
+            // To allow OpenIddict to serialize them, you must attach them a destination, that specifies
+            // whether they should be included in access tokens, in identity tokens or in both.
+
+            switch (claim.Type)
+            {
+                case Claims.Name:
+                    yield return Destinations.AccessToken;
+
+                    if (principal.HasScope(Scopes.Profile))
+                        yield return Destinations.IdentityToken;
+
+                    yield break;
+
+                case Claims.Email:
+                    yield return Destinations.AccessToken;
+
+                    if (principal.HasScope(Scopes.Email))
+                        yield return Destinations.IdentityToken;
+
+                    yield break;
+
+                case Claims.Role:
+                    yield return Destinations.AccessToken;
+
+                    if (principal.HasScope(Scopes.Roles))
+                        yield return Destinations.IdentityToken;
+
+                    yield break;
+
+                // Never include the security stamp in the access and identity tokens, as it's a secret value.
+                case "AspNet.Identity.SecurityStamp": yield break;
+
+                default:
+                    yield return Destinations.AccessToken;
+                    yield break;
+            }
         }
     }
 }

@@ -1,14 +1,11 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 
 namespace Entities
 {
-    public class User : Entity
+    public class User : IdentityUser
     {
-        /// <summary>
-        /// Mail of user
-        /// </summary>
-        public string Mail { get; set; }
 
         /// <summary>
         /// First name of user
@@ -24,16 +21,6 @@ namespace Entities
         /// Birth date of user
         /// </summary>
         public DateTime BirthDate { get; set; }
-
-        /// <summary>
-        /// HashedPassword
-        /// </summary>
-        public byte[] PasswordHash { get; set; }
-
-        /// <summary>
-        /// Salt for the hashed password
-        /// </summary>
-        public byte[] PasswordSalt { get; set; }
 
         /// <summary>
         /// Connected to the app ?
