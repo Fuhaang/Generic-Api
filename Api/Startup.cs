@@ -1,17 +1,20 @@
-using System;
-using System.Collections.Generic;
+using Api.Filters;
+using Entities;
+using EntitiesContext;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using EntitiesContext;
-using Api.Filters;
-using UnitOfWork.Contract;
 using UnitOfWork;
+using UnitOfWork.Contract;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Api
 {
@@ -36,15 +39,32 @@ namespace Api
                 .UseOpenIddict();
             });
 
+            // Register the Identity services.
+            services.AddIdentity<User, IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
+            // Configure Identity to use the same JWT claims as OpenIddict instead
+            // of the legacy WS-Federation claims it uses by default (ClaimTypes),
+            // which saves you from doing the mapping in your authorization controller.
+            //and an account need unique email
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.ClaimsIdentity.UserNameClaimType = Claims.Name;
+                options.ClaimsIdentity.UserIdClaimType = Claims.Subject;
+                options.ClaimsIdentity.RoleClaimType = Claims.Role;
+
+                options.User.RequireUniqueEmail = true;
+            });
+
             services.AddOpenIddict()
                 .AddCore(options => { options.UseEntityFrameworkCore().UseDbContext<ApplicationDbContext>(); })
                 .AddServer(options =>
                 {
-                    options.SetTokenEndpointUris("/connect/token")
-                        .SetAuthorizationEndpointUris("/connect/authorize")
-                        .SetUserinfoEndpointUris("/connect/userinfo")
-                        ;
-                        
+                    options
+                    .SetTokenEndpointUris("/connect/token")
+                    .SetAuthorizationEndpointUris("/connect/authorize")
+                    .SetUserinfoEndpointUris("/connect/userinfo");
 
                     options
                     .AllowPasswordFlow()
@@ -54,6 +74,7 @@ namespace Api
                     options
                     .AddEphemeralEncryptionKey()
                     .AddEphemeralSigningKey();
+
                     options
                     .UseAspNetCore()
                     .EnableTokenEndpointPassthrough()
@@ -62,7 +83,9 @@ namespace Api
                     .DisableTransportSecurityRequirement();
 
                     options.RegisterScopes("api");
-                }).AddValidation(options =>
+
+                })
+                .AddValidation(options =>
                 {
                     // Import the configuration from the local OpenIddict server instance.
                     options.UseLocalServer();
@@ -81,7 +104,7 @@ namespace Api
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo {Title = "Generic Web API", Version = "v1"});
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Generic Web API", Version = "v1" });
 
                 var oauth = new OpenApiSecurityScheme()
                 {
@@ -90,7 +113,7 @@ namespace Api
                     {
                         Password = new OpenApiOAuthFlow()
                         {
-                            Scopes = new Dictionary<string, string> {{"api", "Generic-API"}},
+                            Scopes = new Dictionary<string, string> { { "api", "Generic-API" } },
                             AuthorizationUrl = new Uri("/connect/authorize", UriKind.Relative),
                             TokenUrl = new Uri("/connect/token", UriKind.Relative)
                         }
@@ -115,7 +138,6 @@ namespace Api
                 options.Filters.Add(typeof(LogActionFilter));
             });
 
-            
             services.AddScoped<IUnitOfWork<ApplicationDbContext>, UnitOfWork<ApplicationDbContext>>();
 
             //SignalR
