@@ -9,7 +9,8 @@ using System.Threading.Tasks;
 
 namespace Api.Controllers.V1
 {
-    [Route("api/v1/Account")]
+    [ApiVersion("1.0")]
+    [Route("api/Account")]
     [ApiController]
     public class AccountController : ControllerBase
     {
