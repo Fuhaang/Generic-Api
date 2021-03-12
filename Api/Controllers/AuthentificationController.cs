@@ -18,7 +18,6 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Api.Controllers
 {
-    [AllowAnonymous]
     public class AuthentificationController : ControllerBase
     {
         private readonly IOpenIddictScopeManager _scopeManager;
@@ -36,6 +35,7 @@ namespace Api.Controllers
         }
 
         [HttpPost("~/connect/token"), Produces("application/json")]
+        [AllowAnonymous]
         public async Task<IActionResult> Exchange()
         {
             var request = HttpContext.GetOpenIddictServerRequest() ??
@@ -44,31 +44,56 @@ namespace Api.Controllers
             ClaimsPrincipal claimsPrincipal;
             if (request.IsPasswordGrantType())
             {
-                // Note: the client credentials are automatically validated by OpenIddict:
                 var user = await _userManager.FindByEmailAsync(request.Username);
+                if (user is null)
+                {
+                    return Forbid(
+                        authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
+                        properties: new AuthenticationProperties(new Dictionary<string, string>
+                        {
+                            [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.InvalidGrant,
+                            [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = "The username/password couple is invalid."
+                        }));
+                }
 
-                // if client_id or client_secret are invalid, this action won't be invoked.
-                // If player doesn't exist return BadRequest
-                if (user == null)
-                    return BadRequest("Email and password don't match");
-
-                // Password check
-                // If password are not corresponding return BadRequest
-                var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: false);
+                // Validate the username/password parameters and ensure the account is not locked out.
+                var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
                 if (!result.Succeeded)
                 {
-                    return BadRequest("Email and password don't match");
+                    if (result.IsLockedOut)
+                    {
+                        return Forbid(
+                        authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
+                        properties: new AuthenticationProperties(new Dictionary<string, string>
+                        {
+                            [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.AccessDenied,
+                            [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = "The account is locked out."
+                        }));
+                    }
+                    return Forbid(
+                        authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
+                        properties: new AuthenticationProperties(new Dictionary<string, string>
+                        {
+                            [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.InvalidGrant,
+                            [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = "The username/password couple is invalid."
+                        }));
                 }
 
-                claimsPrincipal = await _signInManager.CreateUserPrincipalAsync(user);
-                claimsPrincipal.SetScopes(request.GetScopes());
-                claimsPrincipal.SetResources(await _scopeManager.ListResourcesAsync(claimsPrincipal.GetScopes()).ToListAsync());
+                var principal = await _signInManager.CreateUserPrincipalAsync(user);
 
-                foreach (var claim in claimsPrincipal.Claims)
+                // Note: in this sample, the granted scopes match the requested scope
+                // but you may want to allow the user to uncheck specific scopes.
+                // For that, simply restrict the list of scopes before calling SetScopes.
+                principal.SetScopes(request.GetScopes());
+                principal.SetResources(await _scopeManager.ListResourcesAsync(principal.GetScopes()).ToListAsync());
+
+                foreach (var claim in principal.Claims)
                 {
-                    claim.SetDestinations(GetDestinations(claim, claimsPrincipal));
+                    claim.SetDestinations(GetDestinations(claim, principal));
                 }
 
+                // Returning a SignInResult will ask OpenIddict to issue the appropriate access/identity tokens.
+                return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             }
             else if (request.IsAuthorizationCodeGrantType())
             {
@@ -77,7 +102,7 @@ namespace Api.Controllers
                     (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme))
                     .Principal;
             }
-            else if (request.RefreshToken != null)
+            else if (request.IsRefreshTokenGrantType())
             {
                 // Retrieve the claims principal stored in the refresh token.
                 claimsPrincipal =
@@ -95,7 +120,7 @@ namespace Api.Controllers
 
         [HttpGet("~/connect/authorize")]
         [HttpPost("~/connect/authorize")]
-        [IgnoreAntiforgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> Authorize()
         {
             var request = HttpContext.GetOpenIddictServerRequest() ??
@@ -133,18 +158,6 @@ namespace Api.Controllers
 
             // Signing in with the OpenIddict authentiction scheme trigger OpenIddict to issue a code (which can be exchanged for an access token)
             return SignIn(claimsPrincipal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-        }
-
-        [HttpGet("~/connect/userinfo")]
-        public async Task<IActionResult> UserInfo()
-        {
-            var claimsPrincipal = (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)).Principal;
-
-            return Ok(new
-            {
-                Subject = claimsPrincipal.GetClaim(OpenIddictConstants.Claims.Subject),
-                Email = claimsPrincipal.GetClaim(OpenIddictConstants.Claims.Email)
-            });
         }
 
         private static IEnumerable<string> GetDestinations(Claim claim, ClaimsPrincipal principal)
