@@ -56,20 +56,5 @@ namespace Api.Controllers.V1
             return await base.Delete(id);
         }
 
-        [MapToApiVersion("1.1")]
-        [HttpGet("{id}/categories")]
-        public async Task<IActionResult> GetCategorieForOneBook([FromRoute] long id)
-        {
-            var book = await _unitOfWork.GetRepository<Book>().GetFirstOrDefault(predicate: b => b.Id == id, include: b => b.Include(b => b.Categories));
-            return Ok(book.Categories);
-        }
-
-        [MapToApiVersion("1.1")]
-        [HttpGet("categories")]
-        public async Task<IActionResult> GetCategorieForAllBook()
-        {
-            var books = await _unitOfWork.GetRepository<Book>().GetMuliple(include: b => b.Include(b => b.Categories));
-            return Ok(books.ToList().Select(b => new { b.Categories, b.Id }));
-        }
     }
 }

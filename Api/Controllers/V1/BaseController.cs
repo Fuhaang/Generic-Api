@@ -2,8 +2,12 @@
 using EntitiesContext;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using UnitOfWork.Contract;
@@ -26,15 +30,37 @@ namespace Api.Controllers.V1
 
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        public virtual async Task<IActionResult> GetAndInclude(Func<IQueryable<T>, IIncludableQueryable<T, object>> include)
+        {
+            return Ok(await _unitOfWork.GetRepository<T>().GetMuliple(include: include));
+        }
+
+        [Consumes(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public virtual async Task<IActionResult> Get([FromRoute] long id)
         {
             var result = await _unitOfWork.GetRepository<T>().GetFirstOrDefault(t => t.Id == id);
+
             if (result != null)
                 return Ok(result);
 
             return NotFound(id);
         }
+
+        [Consumes(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public virtual async Task<IActionResult> GetAndInclude([FromRoute] long id, Func<IQueryable<T>, IIncludableQueryable<T, object>> include)
+        {
+            var result = await _unitOfWork.GetRepository<T>().GetFirstOrDefault(t => t.Id == id, include: include);
+
+            if (result != null)
+                return Ok(result);
+
+            return NotFound(id);
+        }
+
         #endregion
 
         #region CREATE
