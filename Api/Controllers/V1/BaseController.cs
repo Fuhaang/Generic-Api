@@ -3,6 +3,7 @@ using EntitiesContext;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using UnitOfWork.Contract;
@@ -28,7 +29,7 @@ namespace Api.Controllers.V1
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public virtual async Task<IActionResult> Get([FromRoute] long id)
         {
-            var result = await _unitOfWork.GetRepository<T>().GetById(id);
+            var result = await _unitOfWork.GetRepository<T>().GetFirstOrDefault(t => t.Id == id);
             if (result != null)
                 return Ok(result);
 
@@ -37,18 +38,6 @@ namespace Api.Controllers.V1
         #endregion
 
         #region CREATE
-        [Consumes(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public virtual async Task<IActionResult> Create([FromBody] T entity)
-        {
-            if (!await _unitOfWork.GetRepository<T>().Add(entity)) return BadRequest(ModelState);
-
-            var locationUri =
-                $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}/{typeof(T)}";
-
-            return Created(locationUri, entity);
-        }
 
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -96,20 +85,13 @@ namespace Api.Controllers.V1
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public virtual async Task<IActionResult> Delete([FromRoute] long id)
         {
-            var deleted = await _unitOfWork.GetRepository<T>().Delete(id);
-            if (deleted)
-                return NoContent();
-
-            return NotFound();
-        }
-
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public virtual async Task<IActionResult> Delete([FromBody] T entity)
-        {
-            var deleted = await _unitOfWork.GetRepository<T>().Delete(entity);
-            if (deleted)
-                return NoContent();
+            var entityToDelete = await _unitOfWork.GetRepository<T>().GetFirstOrDefault(t => t.Id == id);
+            if (entityToDelete != null)
+            {
+                var deleted = await _unitOfWork.GetRepository<T>().Delete(id);
+                if (deleted)
+                    return NoContent();
+            }
 
             return NotFound();
         }
@@ -118,9 +100,13 @@ namespace Api.Controllers.V1
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public virtual async Task<IActionResult> Delete([FromBody] IEnumerable<T> entities)
         {
-            var deleted = await _unitOfWork.GetRepository<T>().Delete(entities);
-            if (deleted)
-                return NoContent();
+            var entitiesToDelete = await _unitOfWork.GetRepository<T>().GetMuliple(t => entities.ToList().Contains(t));
+            if (entitiesToDelete.Count() == entities.Count())
+            {
+                var deleted = await _unitOfWork.GetRepository<T>().Delete(entities);
+                if (deleted)
+                    return NoContent();
+            }
 
             return NotFound();
         }
