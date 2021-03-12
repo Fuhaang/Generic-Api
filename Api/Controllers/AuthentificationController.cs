@@ -18,6 +18,8 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Api.Controllers
 {
+    [ApiVersionNeutral]
+    [ApiController]
     public class AuthentificationController : ControllerBase
     {
         private readonly IOpenIddictScopeManager _scopeManager;

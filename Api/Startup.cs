@@ -4,6 +4,7 @@ using EntitiesContext;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -33,9 +34,16 @@ namespace Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //add the versionning for the api
             services.AddApiVersioning(options =>
+                //specify the headre to use for select the version of the api
                 options.ApiVersionReader = new HeaderApiVersionReader("api-version")
             );
+            services.AddVersionedApiExplorer(options =>
+            {
+                //major.minor.[-status]
+                options.GroupNameFormat = "'v'VVV";
+            });
             // Dependencies injection
             services.AddDbContext<ApplicationDbContext>(options =>
             {
@@ -107,10 +115,24 @@ namespace Api
                 {
                     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
                 });
-
+            
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Generic Web API", Version = "v1" });
+                // note: need a temporary service provider here because one has not been created yet
+                var provider = services.BuildServiceProvider()
+                                       .GetRequiredService<IApiVersionDescriptionProvider>();
+
+                // add a swagger document for each discovered API version
+                foreach (var description in provider.ApiVersionDescriptions)
+                {
+                    c.SwaggerDoc(description.GroupName, new OpenApiInfo
+                    {
+                        Title = "Api Title",
+                        Version = description.ApiVersion.ToString(),
+                        Description = "Description of the api"
+                    });
+                }
+
 
                 var oauth = new OpenApiSecurityScheme()
                 {
@@ -153,16 +175,20 @@ namespace Api
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IApiVersionDescriptionProvider provider)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Generic Web API v1"));
+                {
+                    foreach (var description in provider.ApiVersionDescriptions)
+                    {
+                        c.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+                    }
+                });
             }
-
             app.UseHttpsRedirection();
 
             app.UseRouting();
