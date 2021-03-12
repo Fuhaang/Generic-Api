@@ -9,6 +9,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Service;
+using Service.Contract;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -139,6 +141,8 @@ namespace Api
             });
 
             services.AddScoped<IUnitOfWork<ApplicationDbContext>, UnitOfWork<ApplicationDbContext>>();
+            services.AddTransient<IEmailSender, MessageServices>();
+            services.AddTransient<ISmsSender, MessageServices>();
 
             //SignalR
             services.AddSignalR();
