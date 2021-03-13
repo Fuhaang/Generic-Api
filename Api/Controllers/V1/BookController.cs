@@ -1,11 +1,11 @@
-﻿using Entities;
+﻿using Api.Controllers.Contract;
+using Entities;
 using EntitiesContext;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OpenIddict.Validation.AspNetCore;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using UnitOfWork.Contract;
 
@@ -56,12 +56,14 @@ namespace Api.Controllers.V1
             return await base.Delete(id);
         }
 
+        [MapToApiVersion("1.1")]
         [HttpGet("Categories")]
         public async Task<IActionResult> GetCategoriesForAllBooks()
         {
             return await base.GetAndInclude(b => b.Include(b => b.Categories));
         }
 
+        [MapToApiVersion("1.1")]
         [HttpGet("{id}/Categories")]
         public async Task<IActionResult> GetCategoriesForOneBooks([FromRoute] long id)
         {
