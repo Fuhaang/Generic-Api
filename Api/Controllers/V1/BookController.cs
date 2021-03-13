@@ -56,5 +56,17 @@ namespace Api.Controllers.V1
             return await base.Delete(id);
         }
 
+        [HttpGet("Categories")]
+        public async Task<IActionResult> GetCategoriesForAllBooks()
+        {
+            return await base.GetAndInclude(b => b.Include(b => b.Categories));
+        }
+
+        [HttpGet("{id}/Categories")]
+        public async Task<IActionResult> GetCategoriesForOneBooks([FromRoute] long id)
+        {
+            return await base.GetAndInclude(id, b => b.Include(b => b.Categories));
+        }
+
     }
 }
