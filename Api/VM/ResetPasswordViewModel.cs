@@ -2,6 +2,9 @@
 
 namespace Api.VM
 {
+    /// <summary>
+    /// Model for ResetPassword
+    /// </summary>
     public class ResetPasswordViewModel
     {
         [Required]

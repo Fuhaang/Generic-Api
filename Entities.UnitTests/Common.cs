@@ -9,52 +9,52 @@ namespace Entities.UnitTests
     public static class Common
     {
         /// <summary>
-        /// Vérifie que l'entité possède bien la propriété passée en paramètre.
+        /// Checks that the entity has the property passed as a parameter.
         /// </summary>
-        /// <param name="typeObjet">type de l'entité</param>
-        /// <param name="nomPropriete">nom de la propriété de l'entité</param>
-        public static void HasProperty(Type typeObjet, string nomPropriete)
+        /// <param name="objectType">entity type</param>
+        /// <param name="propertyName">entity property name</param>
+        public static void HasProperty(Type objectType, string propertyName)
         {
-            var property = typeObjet.GetProperty(nomPropriete);
+            var property = objectType.GetProperty(propertyName);
             Assert.NotNull(property);
         }
 
         /// <summary>
-        /// Vérifie que l'attribut de l'entité a l'annotation [Display(Name = "xxx")] avec la valeur attendue.
+        /// Checks that the entity attribute has the annotation [Display (Name = "expectedString")] with the expected value.
         /// </summary>
-        /// <param name="typeObjet">type de l'entité</param>
-        /// <param name="nomPropriete">nom de la propriété de l'entité</param>
-        /// <param name="chaineAttendue">valeur attendue pour l'affichage de cette propriété</param>
-        public static void DisplayAttribute(Type typeObjet, string nomPropriete, string chaineAttendue)
+        /// <param name="objectType">entity type</param>
+        /// <param name="propertyName">entity property name</param>
+        /// <param name="expectedString">expected value for the display of this property</param>
+        public static void DisplayAttribute(Type objectType, string propertyName, string expectedString)
         {
-            var property = typeObjet.GetProperty(nomPropriete);
+            var property = objectType.GetProperty(propertyName);
             var annotation = (DisplayAttribute)property.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault();
             Assert.NotNull(annotation);
-            Assert.Equal(chaineAttendue, annotation.Name);
+            Assert.Equal(expectedString, annotation.Name);
         }
         /// <summary>
-        /// Vérifie que l'attribut de l'entité a l'annotation [MaxLength(xx)] avec la longueur attendue.
+        /// Checks that the entity attribute has the annotation [MaxLength (max)] with the expected length.
         /// </summary>
-        /// <param name="typeObjet">type de l'entité</param>
-        /// <param name="nomPropriete">nom de la propriété de l'entité</param>
-        /// <param name="max">longueur maximum</param>
-        public static void MaxLengthAttribute(Type typeObjet, string nomPropriete, int max)
+        /// <param name="objectType">entity type</param>
+        /// <param name="propertyName">entity property name</param>
+        /// <param name="max">maximum length</param>
+        public static void MaxLengthAttribute(Type objectType, string propertyName, int max)
         {
-            var property = typeObjet.GetProperty(nomPropriete);
+            var property = objectType.GetProperty(propertyName);
             var annotation = (MaxLengthAttribute)property.GetCustomAttributes(typeof(MaxLengthAttribute), false).FirstOrDefault();
             Assert.NotNull(annotation);
             Assert.Equal(max, annotation.Length);
         }
 
         /// <summary>
-        /// Vérifie que l'attribut de l'entité a l'annotation [MinLength(xx)] avec la longueur attendue.
+        /// Checks that the entity attribute has the annotation [MinLength(min)] with the expected length.
         /// </summary>
-        /// <param name="typeObjet">type de l'entité</param>
-        /// <param name="nomPropriete">nom de la propriété de l'entité</param>
-        /// <param name="min">longueur minimum</param>
-        public static void MinLengthAttribute(Type typeObjet, string nomPropriete, int min)
+        /// <param name="objectType">entity type</param>
+        /// <param name="propertyName">entity property name</param>
+        /// <param name="min">minimum lenght</param>
+        public static void MinLengthAttribute(Type objectType, string propertyName, int min)
         {
-            var property = typeObjet.GetProperty(nomPropriete);
+            var property = objectType.GetProperty(propertyName);
             var annotation = (MinLengthAttribute)property.GetCustomAttributes(typeof(MinLengthAttribute), false).FirstOrDefault();
             Assert.NotNull(annotation);
             Assert.Equal(min, annotation.Length);
@@ -62,25 +62,25 @@ namespace Entities.UnitTests
         }
 
         /// <summary>
-        /// Vérifie que l'attribut de l'entité a l'annotation [Required].
+        /// Checks that the feature attribute has the [Required] annotation.
         /// </summary>
-        /// <param name="typeObjet">type de l'entité</param>
-        /// <param name="nomPropriete">nom de la propriété de l'entité</param>
-        public static void RequiredAttribute(Type typeObjet, string nomPropriete)
+        /// <param name="objectType">entity type</param>
+        /// <param name="propertyName">entity property name</param>
+        public static void RequiredAttribute(Type objectType, string propertyName)
         {
-            var property = typeObjet.GetProperty(nomPropriete);
+            var property = objectType.GetProperty(propertyName);
             var annotation = (RequiredAttribute)property.GetCustomAttributes(typeof(RequiredAttribute), false).FirstOrDefault();
             Assert.NotNull(annotation);
         }
 
         /// <summary>
-        /// Vérifie que l'attribut de l'entité n'a pas l'annotation [Url].
+        /// Checks that the entity attribute does not have the [Url] annotation.
         /// </summary>
-        /// <param name="typeObjet">type de l'entité</param>
-        /// <param name="nomPropriete">nom de la propriété de l'entité</param>
-        public static void HasNotValidationUrlAttribute(Type typeObjet, string nomPropriete)
+        /// <param name="objectType">entity type</param>
+        /// <param name="propertyName">entity property name</param>
+        public static void HasNotValidationUrlAttribute(Type objectType, string propertyName)
         {
-            var property = typeObjet.GetProperty(nomPropriete);
+            var property = objectType.GetProperty(propertyName);
             var annotation = (UrlAttribute)property.GetCustomAttributes(typeof(UrlAttribute), false).FirstOrDefault();
             Assert.Null(annotation);
         }

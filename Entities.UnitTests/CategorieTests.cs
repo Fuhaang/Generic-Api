@@ -4,6 +4,9 @@ using Xunit;
 
 namespace Entities.UnitTests
 {
+    /// <summary>
+    /// Unit test for the Categorie class (Sample for show how work the app)
+    /// </summary>
     public class CategorieTests
     {
         [Fact]

@@ -13,9 +13,9 @@ namespace Api.Filters
         }
 
         /// <summary>
-        ///Sortie du controller
+        /// Controller output for a given ActionContext
         /// </summary>
-        /// <param name="context"></param>
+        /// <param name="context">value for the ActionContext</param>
         public void OnActionExecuted(ActionExecutedContext context)
         {
             StringBuilder message = new StringBuilder("Output : ");
@@ -27,9 +27,9 @@ namespace Api.Filters
         }
 
         /// <summary>
-        /// Entrez du controller
+        /// Controller intput for a given ActionContext
         /// </summary>
-        /// <param name="context"></param>
+        /// <param name="context">value for the ActionContext</param>
         public void OnActionExecuting(ActionExecutingContext context)
         {
             StringBuilder message = new StringBuilder("Input : ");
@@ -42,9 +42,9 @@ namespace Api.Filters
         }
 
         /// <summary>
-        /// Exeception
+        /// Exeception for a given ActionContext
         /// </summary>
-        /// <param name="context"></param>
+        /// <param name="context">value for the ActionContext</param>
         public void OnException(ExceptionContext context)
         {
             _logger.LogError("Error : " + context.Exception);

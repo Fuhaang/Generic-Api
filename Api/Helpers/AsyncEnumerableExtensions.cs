@@ -6,6 +6,12 @@ namespace Api.Helpers
 {
     public static class AsyncEnumerableExtensions
     {
+        /// <summary>
+        /// convert the given source to a list
+        /// </summary>
+        /// <typeparam name="T">Type of List</typeparam>
+        /// <param name="source">source to convert</param>
+        /// <returns></returns>
         public static Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> source)
         {
             if (source is null)

@@ -55,7 +55,6 @@ namespace Api
             }
 
             // To test with Postman, use the following settings:
-            //
             // * Client ID: postman
             // * Client secret: [blank] (not used with public clients)
             // * Scope: openid email profile roles

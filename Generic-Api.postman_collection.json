@@ -1,0 +1,529 @@
+{
+	"info": {
+		"_postman_id": "a17c5796-dffa-48c4-a158-799d7bee5a0c",
+		"name": "Generic-Api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Account/Authorization",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"userName\": \"userName\",\r\n  \"firstName\": \"firstName\",\r\n  \"lastName\": \"lastName\",\r\n  \"birthDate\": \"1900-01-01\",\r\n  \"email\": \"exemple@exemple.com\",\r\n  \"password\": \"Azerty@123\",\r\n  \"confirmPassword\": \"Azerty@123\",\r\n  \"redirect\": \"https://www.google.com/\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:44334/api/Account/Register",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44334",
+							"path": [
+								"api",
+								"Account",
+								"Register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "generic-api",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "&c2rAczWB#2ykNN&!lgWZ7VvbZQABCM#?fE?uP7Y?JM!?5!H47TyaWr4bwGO!g#GZtsN3JS3QCd1Vjqp",
+									"type": "text"
+								},
+								{
+									"key": "username",
+									"value": "exemple@exemple.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "Azerty@123",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://localhost:44334/connect/token",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44334",
+							"path": [
+								"connect",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ForgotPassword",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"exemple@exemple.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:44334/api/Account/ForgotPassword",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44334",
+							"path": [
+								"api",
+								"Account",
+								"ForgotPassword"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ResetPassword",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"UserId\": \"\",\r\n    \"Password\": \"Azerty@123!\",\r\n    \"ConfirmPassword\": \"Azerty@123!\",\r\n    \"Code\": \"code\",\r\n    \"Redirect\": \"https://www.google.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://localhost:44334/api/Account/ResetPassword",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "44334",
+							"path": [
+								"api",
+								"Account",
+								"ResetPassword"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "V1",
+			"item": [
+				{
+					"name": "Books",
+					"item": [
+						{
+							"name": "CreateOneBook",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "api-version",
+										"value": "1.1",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\r\n    {\r\n        \"Name\": \"Harry Potter à l'école des sorciers\"\r\n    }\r\n]",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44334/api/books",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44334",
+									"path": [
+										"api",
+										"books"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "CreateMultipleBook",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "api-version",
+										"value": "1.1",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\r\n    {\r\n    \"Name\": \"Harry Potter et la Chambre des secrets\"\r\n    },\r\n    {\r\n    \"Name\": \"Harry Potter et le Prisonnier d'Azkaban\"\r\n    },\r\n    {\r\n    \"Name\": \"Harry Potter et la coupe de feu\"\r\n    }\r\n]",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44334/api/books",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44334",
+									"path": [
+										"api",
+										"books"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GetAllBooks",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "api-version",
+										"value": "1.0",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://localhost:44334/api/books",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44334",
+									"path": [
+										"api",
+										"books"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GetOneBook",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "api-version",
+										"value": "1.1",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://localhost:44334/api/books/15",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44334",
+									"path": [
+										"api",
+										"books",
+										"15"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GetCategoriesForOneBook",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "api-version",
+										"value": "1.1",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://localhost:44334/api/books/15/categories",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44334",
+									"path": [
+										"api",
+										"books",
+										"15",
+										"categories"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GetCategoriesForAllBooks",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "api-version",
+										"value": "1.1",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://localhost:44334/api/books/categories",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44334",
+									"path": [
+										"api",
+										"books",
+										"categories"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DeleteOneBookFromId",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "api-version",
+										"value": "1.1",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://localhost:44334/api/books/15",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44334",
+									"path": [
+										"api",
+										"books",
+										"15"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DeleteOneBook",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "api-version",
+										"value": "1.1",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\r\n        {\r\n            \"name\": \"Harry Potter et la Chambre des secrets\",\r\n            \"publicationDate\": \"0001-01-01T00:00:00\",\r\n            \"categories\": null,\r\n            \"user\": null,\r\n            \"userId\": null,\r\n            \"id\": 16\r\n        }\r\n]",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44334/api/books",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44334",
+									"path": [
+										"api",
+										"books"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DeleteMultipleBooks",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "api-version",
+										"value": "1.1",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\r\n        {\r\n            \"name\": \"Harry Potter et le Prisonnier d'Azkaban\",\r\n            \"publicationDate\": \"0001-01-01T00:00:00\",\r\n            \"categories\": null,\r\n            \"user\": null,\r\n            \"userId\": null,\r\n            \"id\": 17\r\n        },\r\n        {\r\n            \"name\": \"Harry Potter et la coupe de feu\",\r\n            \"publicationDate\": \"0001-01-01T00:00:00\",\r\n            \"categories\": null,\r\n            \"user\": null,\r\n            \"userId\": null,\r\n            \"id\": 18\r\n        }\r\n]",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://localhost:44334/api/books",
+									"protocol": "https",
+									"host": [
+										"localhost"
+									],
+									"port": "44334",
+									"path": [
+										"api",
+										"books"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	]
+}

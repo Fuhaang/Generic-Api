@@ -1,6 +1,7 @@
 ﻿using Api.VM;
 using Entities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Service.Contract;
@@ -28,12 +29,22 @@ namespace Api.Controllers
             _smsSender = smsSender;
         }
 
+        //POST /api/Account/Register
+        /// <summary>
+        /// Register a new account with the given model
+        /// </summary>
+        /// <param name="model">The values of the ViewModel who describe the account</param>
+        /// <returns>Task<IActionResult> with StatusCodes 200 OK OR 400 BAD REQUEST</returns>
         [HttpPost("Register")]
         [AllowAnonymous]
-        public async Task<IActionResult> Register([FromBody] AuthentificationVM model)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Register([FromBody] AuthentificationViewModel model)
         {
+            //verify the VM have all necessary info 
             if (!ModelState.IsValid)
             {
+                //return 400 with the necessary info who miss
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
                 return BadRequest(errors);
             }
@@ -47,9 +58,12 @@ namespace Api.Controllers
                 Email = model.Email
             };
 
+            //try to create the new user
             var result = await _userManager.CreateAsync(user, model.Password);
+            //if the user is not create
             if (!result.Succeeded)
             {
+                //return 400 with the errors
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
@@ -58,7 +72,7 @@ namespace Api.Controllers
                 return BadRequest(errors);
             }
 
-            //Confirmation email
+            //Send a email to confirm his mail adress
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var encoder = UrlEncoder.Create();
             var callbackUrl = $"https://localhost:44334/api/Account/ConfirmEmail?userId={encoder.Encode(user.Id)}&code={encoder.Encode(code)}&redirect={encoder.Encode(model.Redirect)}";
@@ -68,17 +82,25 @@ namespace Api.Controllers
             return Ok();
         }
 
+        //POST /api/Account/ConfirmEmail
+        /// <summary>
+        /// Confirm the email with the given userId, code and redirect with the given redirectUrl
+        /// </summary>
+        /// <param name="userId">The values of the userId</param>
+        /// <param name="code">The values of the code</param>
+        /// <param name="redirect">The values of the redirect url</param>
+        /// <returns>Task<IActionResult> with StatusCodes 302 FOUND OR 400 BAD REQUEST</returns>
         [HttpGet("ConfirmEmail")]
         [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status302Found)]
         public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string code, [FromQuery] string redirect)
         {
-            //string userId = HttpContext.Request.Query.First(q => q.Key == "userId").Value;
-            //string code = HttpContext.Request.Query.First(q => q.Key == "code").Value;
-            //string redirect = HttpContext.Request.Query.First(q => q.Key == "redirect").Value;
-            if (userId == null || code == null || redirect == null)
+            //Verify that all info is send
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(code) || string.IsNullOrEmpty(redirect))
             {
                 return BadRequest(
-                    "userId and code must be full"
+                    "userId, code and redirect must be full"
                     );
             }
             var user = await _userManager.FindByIdAsync(userId);
@@ -86,13 +108,23 @@ namespace Api.Controllers
             {
                 return BadRequest();
             }
+
+            //confirm the email to the given user and given code
             var result = await _userManager.ConfirmEmailAsync(user, code);
 
-            return result.Succeeded ? string.IsNullOrEmpty(redirect) ? Ok() : Redirect(redirect) : BadRequest();
+            return result.Succeeded ? Redirect(redirect) : BadRequest();
         }
 
+        //POST /api/Account/ForgotPassword
+        /// <summary>
+        /// Send a email for change the password if the user have forgot it with the given model
+        /// </summary>
+        /// <param name="model">The values of the ViewModel</param>
+        /// <returns>Task<IActionResult> with StatusCodes 200 OK OR 400 BAD REQUEST</returns>
         [HttpPost("ForgotPassword")]
         [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordViewModel model)
         {
             if (!ModelState.IsValid)
@@ -122,8 +154,17 @@ namespace Api.Controllers
 #endif
         }
 
+        //POST /api/Account/ResetPassword
+        /// <summary>
+        /// Reset the password with the given model
+        /// </summary>
+        /// <param name="model">The values of the ViewModel who descibe the user parameter for reset password</param>
+        /// <returns>Task<IActionResult> with StatusCodes 200 OK OR 400 BAD REQUEST OR 302 FOUND</returns>
         [HttpPost("ResetPassword")]
         [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status302Found)]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordViewModel model)
         {
             if (!ModelState.IsValid)
