@@ -42,3 +42,5 @@ Then replace the value of **SENDGRID_EMAIL** in Api\Properties\launchSettings.js
 To test the API you can download postman : https://www.postman.com <br>
 Then import the postman collection Generic-Api.postman_collection.json <br>
 If you need help for import a collection un postman : https://learning.postman.com/docs/getting-started/importing-and-exporting-data
+
+Je test mon truc de méchant
