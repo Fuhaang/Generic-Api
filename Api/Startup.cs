@@ -44,6 +44,7 @@ namespace Api
                 //major.minor.[-status]
                 options.GroupNameFormat = "'v'VVV";
             });
+
             // Dependencies injection
             services.AddDbContext<ApplicationDbContext>(options =>
             {
@@ -75,6 +76,7 @@ namespace Api
                 .AddCore(options => { options.UseEntityFrameworkCore().UseDbContext<ApplicationDbContext>(); })
                 .AddServer(options =>
                 {
+                    //set endpoint of OpenIddict
                     options
                     .SetTokenEndpointUris("/connect/token")
                     .SetAuthorizationEndpointUris("/connect/authorize")
@@ -92,16 +94,14 @@ namespace Api
                     options
                     .UseAspNetCore()
                     .EnableTokenEndpointPassthrough()
-                    .EnableAuthorizationEndpointPassthrough()
-                    .EnableUserinfoEndpointPassthrough()
-                    .DisableTransportSecurityRequirement();
+                    .EnableAuthorizationEndpointPassthrough();
 
                     options.RegisterScopes("api");
 
                 })
                 .AddValidation(options =>
                 {
-                    // Import the configuration from the local OpenIddict server instance.
+                    //Import the configuration from the local OpenIddict server instance.
                     options.UseLocalServer();
 
                     // Register the ASP.NET Core host.
@@ -110,12 +110,14 @@ namespace Api
 
             services.AddHostedService<AuthenticationWorker>();
 
+            // Dependencies injection for log
             services.AddControllers(options => { options.Filters.Add(typeof(LogActionFilter)); })
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
                 });
             
+            // Add swagger
             services.AddSwaggerGen(c =>
             {
                 // note: need a temporary service provider here because one has not been created yet
@@ -166,6 +168,7 @@ namespace Api
                 options.Filters.Add(typeof(LogActionFilter));
             });
 
+            // Dependencies injection
             services.AddScoped<IUnitOfWork<ApplicationDbContext>, UnitOfWork<ApplicationDbContext>>();
             services.AddTransient<IEmailSender, MessageServices>();
             services.AddTransient<ISmsSender, MessageServices>();

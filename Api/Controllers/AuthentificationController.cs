@@ -36,6 +36,10 @@ namespace Api.Controllers
             _userManager = userManager;
         }
 
+        /// <summary>
+        /// Get a token for a given username (email) and password
+        /// </summary>
+        /// <returns>Task<IActionResult> with a token bearer</returns>
         [HttpPost("~/connect/token"), Produces("application/json")]
         [AllowAnonymous]
         public async Task<IActionResult> Exchange()
@@ -131,6 +135,9 @@ namespace Api.Controllers
             return SignIn(claimsPrincipal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 
+        /// <summary>
+        /// Use when [Authorize] is use in a controller or method controller
+        /// </summary>
         [HttpGet("~/connect/authorize")]
         [HttpPost("~/connect/authorize")]
         [AllowAnonymous]

@@ -3,7 +3,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Api.VM
 {
-    public class AuthentificationVM
+    /// <summary>
+    /// Model for Authentification
+    /// </summary>
+    public class AuthentificationViewModel
     {
         [Required]
         [StringLength(50, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 5)]

@@ -4,6 +4,10 @@ using Xunit;
 
 namespace Entities.UnitTests
 {
+    /// <summary>
+    /// Test for the user class
+    /// Only custom property
+    /// </summary>
     public class UserTests
     {
         [Fact]

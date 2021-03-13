@@ -11,6 +11,9 @@ using UnitOfWork.Contract;
 
 namespace Api.Controllers.V1
 {
+    /// <summary>
+    /// Sample for show how use BaseController<TEntity>
+    /// </summary>
     [ApiVersion("1.0")]
     [ApiVersion("1.1")]
     [Route("api/books")]
@@ -33,9 +36,9 @@ namespace Api.Controllers.V1
         }
 
         [HttpPost]
-        public override async Task<IActionResult> CreateMultiple([FromBody] IEnumerable<Book> entities)
+        public override async Task<IActionResult> CreateMultipleOrOne([FromBody] IEnumerable<Book> entities)
         {
-            return await base.CreateMultiple(entities);
+            return await base.CreateMultipleOrOne(entities);
         }
 
         [HttpPut]

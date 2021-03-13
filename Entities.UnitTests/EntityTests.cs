@@ -3,6 +3,9 @@
 
 namespace Entities.UnitTests
 {
+    /// <summary>
+    /// Test for the entity class
+    /// </summary>
     public class EntityTests
     {
         [Fact]

@@ -2,6 +2,9 @@
 
 namespace Api.VM
 {
+    /// <summary>
+    /// Model for ForgotPassword
+    /// </summary>
     public class ForgotPasswordViewModel
     {
         [Required]
