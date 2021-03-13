@@ -2,17 +2,15 @@
 using EntitiesContext;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using UnitOfWork.Contract;
 
-namespace Api.Controllers.V1
+namespace Api.Controllers.Contract
 {
     public class BaseController<T> : ControllerBase where T : Entity
     {

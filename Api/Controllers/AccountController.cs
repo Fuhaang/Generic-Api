@@ -5,9 +5,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Service.Contract;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 
-namespace Api.Controllers.V1
+namespace Api.Controllers
 {
     [ApiVersionNeutral]
     [Route("api/Account")]
@@ -29,7 +30,7 @@ namespace Api.Controllers.V1
 
         [HttpPost("Register")]
         [AllowAnonymous]
-        public async Task<IActionResult> Register(AuthentificationVM userVM)
+        public async Task<IActionResult> Register([FromBody] AuthentificationVM model)
         {
             if (!ModelState.IsValid)
             {
@@ -39,14 +40,14 @@ namespace Api.Controllers.V1
 
             var user = new User
             {
-                UserName = userVM.UserName,
-                FirstName = userVM.FirstName,
-                LastName = userVM.LastName,
-                BirthDate = userVM.BirthDate,
-                Email = userVM.Email
+                UserName = model.UserName,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                BirthDate = model.BirthDate,
+                Email = model.Email
             };
 
-            var result = await _userManager.CreateAsync(user, userVM.Password);
+            var result = await _userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
             {
                 foreach (var error in result.Errors)
@@ -59,20 +60,26 @@ namespace Api.Controllers.V1
 
             //Confirmation email
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code, redirect = userVM.Redirect }, protocol: HttpContext.Request.Scheme);
-            await _emailSender.SendEmailAsync(userVM.Email, "Confirm your account",
+            var encoder = UrlEncoder.Create();
+            var callbackUrl = $"https://localhost:44334/api/Account/ConfirmEmail?userId={encoder.Encode(user.Id)}&code={encoder.Encode(code)}&redirect={encoder.Encode(model.Redirect)}";
+            await _emailSender.SendEmailAsync(model.Email, "Confirm your account",
                 "Please confirm your account by clicking this link:  <a href=\"" + callbackUrl + "\">link</a>");
 
             return Ok();
         }
 
-        [HttpGet]
+        [HttpGet("ConfirmEmail")]
         [AllowAnonymous]
-        public async Task<IActionResult> ConfirmEmail(string userId, string code, string redirect)
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string code, [FromQuery] string redirect)
         {
-            if (userId is null || code is null)
+            //string userId = HttpContext.Request.Query.First(q => q.Key == "userId").Value;
+            //string code = HttpContext.Request.Query.First(q => q.Key == "code").Value;
+            //string redirect = HttpContext.Request.Query.First(q => q.Key == "redirect").Value;
+            if (userId == null || code == null || redirect == null)
             {
-                return BadRequest();
+                return BadRequest(
+                    "userId and code must be full"
+                    );
             }
             var user = await _userManager.FindByIdAsync(userId);
             if (user is null)
@@ -86,7 +93,7 @@ namespace Api.Controllers.V1
 
         [HttpPost("ForgotPassword")]
         [AllowAnonymous]
-        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -117,7 +124,7 @@ namespace Api.Controllers.V1
 
         [HttpPost("ResetPassword")]
         [AllowAnonymous]
-        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordViewModel model)
         {
             if (!ModelState.IsValid)
             {

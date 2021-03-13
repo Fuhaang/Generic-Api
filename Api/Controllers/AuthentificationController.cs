@@ -58,6 +58,17 @@ namespace Api.Controllers
                         }));
                 }
 
+                if (!user.EmailConfirmed)
+                {
+                    return Forbid(
+                        authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
+                        properties: new AuthenticationProperties(new Dictionary<string, string>
+                        {
+                            [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.AccessDenied,
+                            [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = "You have not confirmed your email."
+                        }));
+                }
+
                 // Validate the username/password parameters and ensure the account is not locked out.
                 var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
                 if (!result.Succeeded)
